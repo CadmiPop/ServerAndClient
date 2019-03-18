@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -11,17 +12,16 @@ namespace Server
     public class Person
     {
         private readonly TcpClient client;
-        private readonly string userName;        
-        private NetworkStream stream;       
+        private readonly string userName;
+        private NetworkStream stream;
 
         public Person(TcpClient client)
         {
             this.client = client;
             this.stream = client.GetStream();
-            StrartThread();          
+            StrartThread();
+            /*his.userName = GetUsername(userName);*/
         }
-
-        private bool IsConnected => client.Connected;
 
         public event Action<Message> NewMessage;
 
@@ -29,7 +29,7 @@ namespace Server
 
         public void StrartThread()
         {
-            var clientThread = new Thread(()=> Engage());
+            var clientThread = new Thread(() => Engage());
             clientThread.Start();
         }
 
@@ -50,7 +50,7 @@ namespace Server
                     DispachMessage(message);
                 }
                 catch (IOException)
-                {                   
+                {
                     DisconnectPerson(this);
                     return;
                 }
@@ -71,7 +71,7 @@ namespace Server
         {
             string message = String.Empty;
             message = ProtocolInOut(message);
-            Console.WriteLine(message);
+            Console.WriteLine(/*userName + ":" +*/ message);
             return new Message(message);
         }
 
@@ -90,6 +90,11 @@ namespace Server
             return message = Encoding.ASCII.GetString(ms.ToArray());
         }
 
-        public string GetUsername(string Username) => Username = ProtocolInOut(Username);       
+        //public string GetUsername(string Username)
+        //{
+        //    var a = Read();
+        //    Username = a.ToString();
+        //    return Username = string.Concat(Username.TakeWhile((c) => c != ':'));
+        //}
     }
 }

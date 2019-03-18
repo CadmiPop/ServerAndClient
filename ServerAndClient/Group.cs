@@ -34,8 +34,6 @@ namespace Server
             {
                 person.Send(message);
             }
-        }
-
-        
+        }      
     }
 }
