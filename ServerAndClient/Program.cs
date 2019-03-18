@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Net.Sockets;
 
 namespace ServerAndClient
 {
-    class Program
+    public class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            var server = new Server.Server();
         }
     }
 }
