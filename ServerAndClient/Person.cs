@@ -51,7 +51,8 @@ namespace Server
                 }
                 catch (IOException)
                 {
-                    DisconnectPerson(this);
+                    Console.WriteLine("Client Disconnected");
+                    DisconnectPerson(this);                   
                     return;
                 }
             }
