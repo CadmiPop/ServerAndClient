@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using CommonClasses;
 
 namespace Client
 {
@@ -32,19 +33,14 @@ namespace Client
             client = new TcpClient();
             client.Connect(IPAddress.Parse("127.0.0.1"), 5000);
             GetUserName();
-            Console.WriteLine(userName + " connected to Server!!");
+            Console.WriteLine("-----You are now connected to Server!!!-----");
         }
 
         public void StrartThread()
         {
-            Thread clientThread = new Thread(() => Engage());
+            Thread clientThread = new Thread(() => Send());
             clientThread.Start();
             Read();
-        }
-
-        private void Engage()
-        {
-            Send();
         }
 
         public void Send()
@@ -71,8 +67,7 @@ namespace Client
             {
                 try
                 {
-                    string message = "test";
-                    message = new Protocol(stream).Manipulation();
+                    string message = new Protocol(stream).Message();
                     Console.WriteLine(message);
                 }
                 catch (Exception)

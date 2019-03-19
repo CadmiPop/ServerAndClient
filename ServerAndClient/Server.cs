@@ -21,7 +21,7 @@ namespace Server
 
         public void AcceptClients()
         {
-            Console.WriteLine("Server Started!!");
+            Console.WriteLine("-----Server Started!!!-----");
             while (true)
             {
                 var client = new Person(chatServer.AcceptTcpClient());

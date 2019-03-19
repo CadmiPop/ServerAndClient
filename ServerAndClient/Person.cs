@@ -6,13 +6,14 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using CommonClasses;
 
 namespace Server
 {
     public class Person
     {
         private readonly TcpClient client;
-        private readonly string userName;
+        private string userName;
         private NetworkStream stream;
 
         public Person(TcpClient client)
@@ -20,7 +21,6 @@ namespace Server
             this.client = client;
             this.stream = client.GetStream();
             StrartThread();
-            /*his.userName = GetUsername(userName);*/
         }
 
         public event Action<Message> NewMessage;
@@ -51,7 +51,7 @@ namespace Server
                 }
                 catch (IOException)
                 {
-                    Console.WriteLine("Client Disconnected");
+                    Console.WriteLine(userName + " Disconnected!!!");
                     DisconnectPerson(this);                   
                     return;
                 }
@@ -64,38 +64,19 @@ namespace Server
         }
 
         private void DispachMessage(Message message)
-        {
+        {           
             NewMessage?.Invoke(message);
         }
 
         public Message Read()
         {
-            string message = String.Empty;
-            message = ProtocolInOut(message);
-            Console.WriteLine(/*userName + ":" +*/ message);
+            string message = new Protocol(stream).Message();
+            if (userName == null)
+            {
+                userName = string.Concat(message.TakeWhile((c) => c != ':'));
+            }
+            Console.WriteLine(message);
             return new Message(message);
         }
-
-        public string ProtocolInOut(string message)
-        {
-            MemoryStream ms = new MemoryStream();
-            byte[] buffer = new byte[1];
-            stream.Read(buffer, 0, 1);
-            int length = buffer[0];
-
-            while (ms.Length != length)
-            {
-                ms.Write(buffer, 0, stream.Read(buffer, 0, buffer.Length));
-            }
-
-            return message = Encoding.ASCII.GetString(ms.ToArray());
-        }
-
-        //public string GetUsername(string Username)
-        //{
-        //    var a = Read();
-        //    Username = a.ToString();
-        //    return Username = string.Concat(Username.TakeWhile((c) => c != ':'));
-        //}
     }
 }

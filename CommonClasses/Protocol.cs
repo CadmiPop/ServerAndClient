@@ -4,7 +4,7 @@ using System.IO;
 using System.Net.Sockets;
 using System.Text;
 
-namespace Client
+namespace CommonClasses
 {
     public class Protocol
     {
@@ -16,10 +16,10 @@ namespace Client
         public Protocol(NetworkStream stream)
         {
             this.stream = stream;
-            buffer = new byte[1];           
+            buffer = new byte[1];
         }
 
-        public string Manipulation()
+        public string Message()
         {
             MemoryStream ms = new MemoryStream();
             stream.Read(buffer, 0, 1);
@@ -29,6 +29,6 @@ namespace Client
                 ms.Write(buffer, 0, stream.Read(buffer, 0, buffer.Length));
             }
             return message = Encoding.ASCII.GetString(ms.ToArray());
-        } 
+        }
     }
 }
