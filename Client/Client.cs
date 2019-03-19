@@ -17,9 +17,8 @@ namespace Client
         public Client()
         {           
             ConnectClient();
-            this.stream = client.GetStream();           
-            StrartThread();
-            
+            this.stream = client.GetStream();
+            StrartThread();           
         }
 
         private void GetUserName()
@@ -40,50 +39,60 @@ namespace Client
         {
             Thread clientThread = new Thread(() => Engage());
             clientThread.Start();
-            while (true)
-            {
-                Read();
-            }
+            Read();
         }
 
         private void Engage()
         {
-            while (true)
-            {             
-                Send();
-            }
+            Send();
         }
 
         public void Send()
         {
-            string msg = Console.ReadLine();
-            var message = new Message(userName + ": " + msg);
-            stream.Write(BitConverter.GetBytes(message.ToByteArray().Length), 0, 1);
-            stream.Write(message.ToByteArray(), 0, message.ToString().Length);
-            stream.Flush();
-        }
-
-        public Message Read()
-        {
-            string message = String.Empty;
-            message = ProtocolInOut(message);
-            Console.WriteLine(message);
-            return new Message(message);
-        }
-
-        public string ProtocolInOut(string message)
-        {
-            MemoryStream ms = new MemoryStream();
-            byte[] buffer = new byte[1];
-            stream.Read(buffer, 0, 1);
-            int length = buffer[0];
-
-            while (ms.Length != length)
+            while (true)
             {
-                ms.Write(buffer, 0, stream.Read(buffer, 0, buffer.Length));
+                string msg = Console.ReadLine();
+                if (msg == "exit" || msg.Length > 255)
+                {
+                    Disconnect();
+                    return;
+                }
+                ClearLastLine();
+                var message = new Message(userName + ": " + msg);
+                stream.Write(BitConverter.GetBytes(message.ToByteArray().Length), 0, 1);
+                stream.Write(message.ToByteArray(), 0, message.ToString().Length);
+                stream.Flush();
             }
+        }
 
-            return message = Encoding.ASCII.GetString(ms.ToArray());
+        public void Read()
+        {
+            while (true)
+            {
+                try
+                {
+                    string message = "test";
+                    message = new Protocol(stream).Manipulation();
+                    Console.WriteLine(message);
+                }
+                catch (Exception)
+                {
+                    return;
+                }
+            } 
+        }
+
+        private void Disconnect()
+        {
+            stream.Close();
+            client.Close();
+        }
+
+        public static void ClearLastLine()
+        {
+            Console.SetCursorPosition(0, Console.CursorTop - 1);
+            Console.Write(new string(' ', Console.BufferWidth));
+            Console.SetCursorPosition(0, Console.CursorTop - 1);
         }
     }
 }
