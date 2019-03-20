@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net.Sockets;
-using System.Reflection.Metadata.Ecma335;
+﻿using System.Linq;
 using System.Text;
 
 namespace CommonClasses
@@ -21,10 +17,16 @@ namespace CommonClasses
         {
         }
 
-        public byte[] ToByteArray() =>
-            Encoding.UTF8.GetBytes(message);
+        public byte[] ToByteArray()
+        {
+            return Encoding.UTF8.GetBytes(message);
+        }
 
-        public override string ToString() => message;
+        public override string ToString()
+        {
+            return message;
+        }
 
+        public string UserName => string.Concat(message.TakeWhile((c) => c != ':'));
     }
 }

@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CommonClasses\CommonClasses.csproj" />
+    <ProjectReference Include="..\CommonClasses\Common.csproj" />
   </ItemGroup>
 
 </Project>

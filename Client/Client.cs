@@ -13,12 +13,12 @@ namespace Client
     {
         private TcpClient client;
         private string userName;
-        private NetworkStream stream;
+        private ChatStream stream;
 
         public Client()
         {           
             ConnectClient();
-            this.stream = client.GetStream();
+            this.stream = new ChatStream(client.GetStream());
             StrartThread();           
         }
 
@@ -48,16 +48,14 @@ namespace Client
             while (true)
             {
                 string msg = Console.ReadLine();
-                if (msg == "exit" || msg.Length > 255)
+                if (msg.Contains("exit") || msg.Length > 255)
                 {
+                    stream.Send(new Message(userName + ":<!exit!>"));
                     Disconnect();
                     return;
                 }
                 ClearLastLine();
-                var message = new Message(userName + ": " + msg);
-                stream.Write(BitConverter.GetBytes(message.ToByteArray().Length), 0, 1);
-                stream.Write(message.ToByteArray(), 0, message.ToString().Length);
-                stream.Flush();
+                stream.Send(new Message(userName + ": " + msg));
             }
         }
 
@@ -67,8 +65,7 @@ namespace Client
             {
                 try
                 {
-                    string message = new Protocol(stream).Message();
-                    Console.WriteLine(message);
+                    Console.WriteLine(stream.Message());
                 }
                 catch (Exception)
                 {

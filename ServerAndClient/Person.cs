@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using CommonClasses;
+using System;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
-using CommonClasses;
 
 namespace Server
 {
@@ -14,12 +10,12 @@ namespace Server
     {
         private readonly TcpClient client;
         private string userName;
-        private NetworkStream stream;
+        private ChatStream stream;
 
         public Person(TcpClient client)
         {
             this.client = client;
-            this.stream = client.GetStream();
+            stream = new ChatStream(client.GetStream());
             StrartThread();
         }
 
@@ -29,16 +25,10 @@ namespace Server
 
         public void StrartThread()
         {
-            var clientThread = new Thread(() => Engage());
+            Thread clientThread = new Thread(() => Engage());
             clientThread.Start();
         }
 
-        public void Send(Message message)
-        {
-            stream.Write(BitConverter.GetBytes(message.ToByteArray().Length), 0, 1);
-            stream.Write(message.ToByteArray(), 0, message.ToString().Length);
-            stream.Flush();
-        }
 
         private void Engage()
         {
@@ -46,16 +36,32 @@ namespace Server
             {
                 try
                 {
-                    var message = Read();
+                    Message message = Read();
+                    if (message.ToString().Contains("<!exit!>"))
+                    {
+                        Leave();
+                        return;
+                    }
+                    Console.WriteLine(message);
                     DispachMessage(message);
                 }
                 catch (IOException)
                 {
-                    Console.WriteLine(userName + " Disconnected!!!");
-                    DisconnectPerson(this);                   
+                    Leave();
                     return;
                 }
             }
+        }
+
+        private void Leave()
+        {
+            Console.WriteLine(userName + " Disconnected!!!");
+            DisconnectPerson(this);
+        }
+
+        internal void Send(Message message)
+        {
+            stream.Send(message);
         }
 
         private void DisconnectPerson(Person person)
@@ -64,19 +70,18 @@ namespace Server
         }
 
         private void DispachMessage(Message message)
-        {           
+        {
             NewMessage?.Invoke(message);
         }
 
         public Message Read()
         {
-            string message = new Protocol(stream).Message();
+            Message message = stream.Message();
             if (userName == null)
             {
-                userName = string.Concat(message.TakeWhile((c) => c != ':'));
+                userName = message.UserName;
             }
-            Console.WriteLine(message);
-            return new Message(message);
+            return message;
         }
     }
 }
