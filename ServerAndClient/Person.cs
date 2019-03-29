@@ -12,76 +12,71 @@ namespace Server
         private string userName;
         private ChatStream stream;
 
+        private readonly Action messageSent;
+
         public Person(TcpClient client)
         {
             this.client = client;
             stream = new ChatStream(client.GetStream());
-            StrartThread();
         }
 
         public event Action<Message> NewMessage;
 
         public event Action<Person> PersonDisconnected;
 
-        public void StrartThread()
+        public void Engage()
         {
-            Thread clientThread = new Thread(() => Engage());
-            clientThread.Start();
-        }
-
-
-        private void Engage()
-        {
-            while (true)
-            {
-                try
-                {
-                    Message message = Read();
-                    if (message.ToString().Contains("<!exit!>"))
-                    {
-                        Leave();
-                        return;
-                    }
-                    Console.WriteLine(message);
-                    DispachMessage(message);
-                }
-                catch (IOException)
-                {
-                    Leave();
-                    return;
-                }
-            }
-        }
+            BeginReadMessage();                                
+        }      
 
         private void Leave()
         {
             Console.WriteLine(userName + " Disconnected!!!");
-            DisconnectPerson(this);
+            DisconnectPerson();
         }
 
         internal void Send(Message message)
         {
-            stream.Send(message);
+            stream.Send(message, messageSent, e => DisconnectPerson());
         }
 
-        private void DisconnectPerson(Person person)
+        private void DisconnectPerson()
         {
-            PersonDisconnected?.Invoke(person);
+            PersonDisconnected?.Invoke(this);
         }
 
         private void DispachMessage(Message message)
-        {
+        {           
             NewMessage?.Invoke(message);
         }
 
-        public Message Read()
+        public void BeginReadMessage()
         {
-            Message message = stream.Message();
+            stream.BeginReadMessage(m =>
+            {
+                SaveUserNameFromMessage(m);
+                if (m.ToString().Contains("<!exit!>"))
+                {
+                    Leave();
+                    return;
+                }
+                Print(m);
+                DispachMessage(m);
+                BeginReadMessage();
+            }, e => DisconnectPerson());
+        }
+
+        private void SaveUserNameFromMessage(Message m)
+        {
             if (userName == null)
             {
-                userName = message.UserName;
+                userName = m.UserName;
             }
-            return message;
+        }
+
+        public void Print(Message message)
+        {
+            Console.WriteLine(message);
         }
     }
 }

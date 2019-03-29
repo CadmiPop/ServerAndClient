@@ -14,14 +14,15 @@ namespace Client
         private TcpClient client;
         private string userName;
         private ChatStream stream;
+        
 
         public Client()
         {           
-            ConnectClient();
+            ConnectClient();           
             this.stream = new ChatStream(client.GetStream());
-            StrartThread();           
+            Read();
+            Send();
         }
-
         private void GetUserName()
         {
             Console.WriteLine("Enter Username:");
@@ -36,11 +37,14 @@ namespace Client
             Console.WriteLine("-----You are now connected to Server!!!-----");
         }
 
-        public void StrartThread()
+        private Action<Exception> onSendError;
+        private Action messageSent;
+        private Action<Exception> onReadError;
+        private Action<Message> messageReceived;
+
+        private void DispachMessage(Message message)
         {
-            Thread clientThread = new Thread(() => Send());
-            clientThread.Start();
-            Read();
+            messageReceived?.Invoke(message);
         }
 
         public void Send()
@@ -50,28 +54,23 @@ namespace Client
                 string msg = Console.ReadLine();
                 if (msg.Contains("exit") || msg.Length > 255)
                 {
-                    stream.Send(new Message(userName + ":<!exit!>"));
+                    stream.Send(new Message(userName + ":<!exit!>"), messageSent, onSendError);
                     Disconnect();
                     return;
                 }
                 ClearLastLine();
-                stream.Send(new Message(userName + ": " + msg));
-            }
+                stream.Send(new Message(userName + ": " + msg), messageSent, onSendError);
+            }            
         }
 
         public void Read()
         {
-            while (true)
+            stream.BeginReadMessage(m =>
             {
-                try
-                {
-                    Console.WriteLine(stream.Message());
-                }
-                catch (Exception)
-                {
-                    return;
-                }
-            } 
+                Console.WriteLine(m);
+                DispachMessage(m);
+                Read();
+            }, onReadError);
         }
 
         private void Disconnect()

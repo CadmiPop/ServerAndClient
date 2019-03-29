@@ -20,6 +20,7 @@ namespace Server
             person.NewMessage += Broadcast;
             person.PersonDisconnected += Remove;
             persons.Add(person);
+            person.Engage();
         }
 
         public void Remove(Person person)
